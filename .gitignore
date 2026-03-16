@@ -16,3 +16,4 @@ Thumbs.db
 
 # Ignore markdown docs in project root
 /*.md
+!/README.md
