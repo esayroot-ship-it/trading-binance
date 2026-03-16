@@ -1,0 +1,18 @@
+# IDE
+.idea/
+*.iml
+
+# Build outputs
+**/target/
+**/build/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Ignore markdown docs in project root
+/*.md

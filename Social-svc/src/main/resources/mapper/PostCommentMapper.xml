@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.socialsvc.mapper.PostCommentMapper">
+
+    <sql id="Base_Column_List">id, post_id, user_id, parent_id, content, status, is_deleted, create_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.PostComment">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_comment
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.PostComment">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_comment
+    </select>
+
+    <select id="selectVisibleByPostId" resultType="org.example.common.entity.PostComment">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_comment
+        WHERE post_id = #{postId}
+          AND status = 1
+          AND is_deleted = 0
+        ORDER BY create_time ASC, id ASC
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.PostComment">
+        INSERT INTO post_comment (post_id, user_id, parent_id, content, status, is_deleted, create_time)
+        VALUES (#{postId}, #{userId}, #{parentId}, #{content}, #{status}, #{isDeleted}, #{createTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.PostComment">
+        UPDATE post_comment
+        SET
+            post_id = #{postId},
+            user_id = #{userId},
+            parent_id = #{parentId},
+            content = #{content},
+            status = #{status},
+            is_deleted = #{isDeleted},
+            create_time = #{createTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM post_comment
+        WHERE id = #{id}
+    </delete>
+
+    <update id="softDeleteByPostId">
+        UPDATE post_comment
+        SET is_deleted = 1
+        WHERE post_id = #{postId}
+          AND is_deleted = 0
+    </update>
+
+    <update id="softDeleteByIds">
+        UPDATE post_comment
+        SET is_deleted = 1
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="countNotDeletedByIds" resultType="int">
+        SELECT COUNT(1)
+        FROM post_comment
+        WHERE is_deleted = 0
+          AND id IN
+          <foreach collection="ids" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
+
+    <select id="selectChildIdsByParentIds" resultType="java.lang.Long">
+        SELECT id
+        FROM post_comment
+        WHERE parent_id IN
+        <foreach collection="parentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.marketsvc.mapper.AssetKlineMapper">
+
+    <sql id="Base_Column_List">id, symbol, timeframe, kline_json, last_kline_time, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.AssetKline">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_kline
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.AssetKline">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_kline
+    </select>
+
+    <select id="selectBySymbolAndTimeframe" resultType="org.example.common.entity.AssetKline">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_kline
+        WHERE symbol = #{symbol}
+          AND timeframe = #{timeframe}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.AssetKline" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO asset_kline (symbol, timeframe, kline_json, last_kline_time, update_time)
+        VALUES (#{symbol}, #{timeframe}, #{klineJson}, #{lastKlineTime}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.AssetKline">
+        UPDATE asset_kline
+        SET symbol = #{symbol},
+            timeframe = #{timeframe},
+            kline_json = #{klineJson},
+            last_kline_time = #{lastKlineTime},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="upsertBySymbolAndTimeframe" parameterType="org.example.common.entity.AssetKline">
+        INSERT INTO asset_kline (symbol, timeframe, kline_json, last_kline_time, update_time)
+        VALUES (#{symbol}, #{timeframe}, #{klineJson}, #{lastKlineTime}, #{updateTime})
+        ON DUPLICATE KEY UPDATE
+            kline_json = VALUES(kline_json),
+            last_kline_time = VALUES(last_kline_time),
+            update_time = VALUES(update_time)
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM asset_kline
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

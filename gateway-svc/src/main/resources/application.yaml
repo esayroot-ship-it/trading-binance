@@ -1,0 +1,90 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-svc
+  threads:
+    virtual:
+      enabled: true
+  config:
+    import:
+      - optional:nacos:${spring.application.name}.yaml?group=${NACOS_CONFIG_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_DISCOVERY_GROUP:DEFAULT_GROUP}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        group: ${NACOS_CONFIG_GROUP:DEFAULT_GROUP}
+        file-extension: yaml
+    gateway:
+      mvc:
+        routes:
+          - id: user-svc
+            uri: ${USER_SVC_URI:lb://user-svc}
+            predicates:
+              - Path=/api/users/**
+          - id: market-svc
+            uri: lb://market-svc
+            predicates:
+              - Path=/api/market/**
+          - id: market-svc-ws
+            uri: lb://market-svc
+            predicates:
+              - Path=/ws/market,/ws/market/**
+          - id: trading-svc
+            uri: lb://trading-svc
+            predicates:
+              - Path=/api/trading/**
+          - id: social-svc
+            uri: ${SOCIAL_SVC_URI:lb://Social-svc}
+            predicates:
+              - Path=/api/social/**
+          - id: message-svc
+            uri: lb://message-svc
+            predicates:
+              - Path=/api/message/**
+          - id: ai-svc
+            uri: lb://ai-svc
+            predicates:
+              - Path=/api/ai/**
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 1000ms
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+knife4j:
+  enable: true
+jwt:
+  issuer: ${JWT_ISSUER:user-svc}
+  secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+  expire-seconds: ${JWT_EXPIRE_SECONDS:7200}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG

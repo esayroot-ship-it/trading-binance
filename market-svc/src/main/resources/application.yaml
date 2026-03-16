@@ -1,0 +1,115 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: market-svc
+  threads:
+    virtual:
+      enabled: true
+  config:
+    import:
+      - optional:nacos:${spring.application.name}.yaml?group=${NACOS_CONFIG_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_DISCOVERY_GROUP:DEFAULT_GROUP}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        group: ${NACOS_CONFIG_GROUP:DEFAULT_GROUP}
+        file-extension: yaml
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        port: ${SENTINEL_API_PORT:8719}
+      eager: true
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/trading_platform?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 1000ms
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+knife4j:
+  enable: true
+
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: tx-group
+  registry:
+    type: file
+  service:
+    vgroup-mapping:
+      tx-group: default
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+
+mybatis:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: org.example.common.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+jwt:
+  issuer: market-svc
+  secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+  expire-seconds: ${JWT_EXPIRE_SECONDS:7200}
+
+market:
+  binance:
+    base-url: ${BINANCE_BASE_URL:https://api.binance.com}
+    ws-base-url: ${BINANCE_WS_BASE_URL:wss://stream.binance.com:9443}
+    kline-interval: ${BINANCE_KLINE_INTERVAL:1m}
+    kline-intervals: ${BINANCE_KLINE_INTERVALS:15m,1h,4h,1d}
+    history-limit: ${BINANCE_HISTORY_LIMIT:200}
+    refresh-interval-ms: ${BINANCE_REFRESH_INTERVAL_MS:1000}
+    ws-reconnect-delay-ms: ${BINANCE_WS_RECONNECT_DELAY_MS:3000}
+    kline-rest-refresh-interval-ms: ${BINANCE_KLINE_REST_REFRESH_INTERVAL_MS:60000}
+    kline-rest-refresh-initial-delay-ms: ${BINANCE_KLINE_REST_REFRESH_INITIAL_DELAY_MS:5000}
+  ws:
+    push-interval-ms: ${MARKET_WS_PUSH_INTERVAL_MS:1000}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.tradingsvc.mapper.AccountTransactionLogMapper">
+
+    <sql id="Base_Column_List">id, user_id, currency, trans_type, amount, balance_after, ref_id, remark, create_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.AccountTransactionLog">
+        SELECT <include refid="Base_Column_List"/>
+        FROM account_transaction_log
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.AccountTransactionLog">
+        SELECT <include refid="Base_Column_List"/>
+        FROM account_transaction_log
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.AccountTransactionLog">
+        INSERT INTO account_transaction_log (user_id, currency, trans_type, amount, balance_after, ref_id, remark, create_time)
+        VALUES (#{userId}, #{currency}, #{transType}, #{amount}, #{balanceAfter}, #{refId}, #{remark}, #{createTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.AccountTransactionLog">
+        UPDATE account_transaction_log
+        SET
+            user_id = #{userId},
+            currency = #{currency},
+            trans_type = #{transType},
+            amount = #{amount},
+            balance_after = #{balanceAfter},
+            ref_id = #{refId},
+            remark = #{remark},
+            create_time = #{createTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM account_transaction_log
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

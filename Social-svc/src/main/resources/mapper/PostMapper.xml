@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.socialsvc.mapper.PostMapper">
+
+    <sql id="Base_Column_List">id, user_id, category_id, title, content, images, view_count, like_count, comment_count, status, is_deleted, create_time, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.Post">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.Post">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.Post" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO post (user_id, category_id, title, content, images, view_count, like_count, comment_count, status, is_deleted, create_time, update_time)
+        VALUES (#{userId}, #{categoryId}, #{title}, #{content}, #{images}, #{viewCount}, #{likeCount}, #{commentCount}, #{status}, #{isDeleted}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.Post">
+        UPDATE post
+        SET
+            user_id = #{userId},
+            category_id = #{categoryId},
+            title = #{title},
+            content = #{content},
+            images = #{images},
+            view_count = #{viewCount},
+            like_count = #{likeCount},
+            comment_count = #{commentCount},
+            status = #{status},
+            is_deleted = #{isDeleted},
+            create_time = #{createTime},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM post
+        WHERE id = #{id}
+    </delete>
+
+    <select id="selectPage" resultType="org.example.common.entity.Post">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post
+        WHERE status = 1 AND is_deleted = 0
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVisible" resultType="long">
+        SELECT COUNT(1)
+        FROM post
+        WHERE status = 1 AND is_deleted = 0
+    </select>
+
+    <select id="selectPageByCategory" resultType="org.example.common.entity.Post">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post
+        WHERE status = 1 AND is_deleted = 0 AND category_id = #{categoryId}
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVisibleByCategory" resultType="long">
+        SELECT COUNT(1)
+        FROM post
+        WHERE status = 1 AND is_deleted = 0 AND category_id = #{categoryId}
+    </select>
+
+    <update id="incrementLikeCount">
+        UPDATE post
+        SET like_count = like_count + 1,
+            update_time = NOW()
+        WHERE id = #{postId}
+    </update>
+
+    <update id="incrementCommentCount">
+        UPDATE post
+        SET comment_count = comment_count + 1,
+            update_time = NOW()
+        WHERE id = #{postId}
+    </update>
+
+    <update id="softDeleteById">
+        UPDATE post
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{postId}
+          AND is_deleted = 0
+    </update>
+
+    <update id="softDeleteByIdAndUserId">
+        UPDATE post
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{postId}
+          AND user_id = #{userId}
+          AND is_deleted = 0
+    </update>
+
+    <update id="decrementCommentCount">
+        UPDATE post
+        SET comment_count = CASE WHEN comment_count &gt;= #{delta} THEN comment_count - #{delta} ELSE 0 END,
+            update_time = NOW()
+        WHERE id = #{postId}
+    </update>
+
+</mapper>

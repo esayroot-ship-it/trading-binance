@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.aisvc.mapper.MqMessageLogMapper">
+
+    <sql id="Base_Column_List">message_id, service_name, status, error_info, create_time, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.MqMessageLog">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mq_message_log
+        WHERE message_id = #{messageId}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.MqMessageLog">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mq_message_log
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.MqMessageLog">
+        INSERT INTO mq_message_log (message_id, service_name, status, error_info, create_time, update_time)
+        VALUES (#{messageId}, #{serviceName}, #{status}, #{errorInfo}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.MqMessageLog">
+        UPDATE mq_message_log
+        SET
+            service_name = #{serviceName},
+            status = #{status},
+            error_info = #{errorInfo},
+            create_time = #{createTime},
+            update_time = #{updateTime}
+        WHERE message_id = #{messageId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM mq_message_log
+        WHERE message_id = #{messageId}
+    </delete>
+
+</mapper>

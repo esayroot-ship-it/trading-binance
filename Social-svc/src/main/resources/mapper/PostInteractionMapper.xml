@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.socialsvc.mapper.PostInteractionMapper">
+
+    <sql id="Base_Column_List">id, post_id, user_id, action_type, create_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.PostInteraction">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_interaction
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.PostInteraction">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_interaction
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.PostInteraction">
+        INSERT INTO post_interaction (post_id, user_id, action_type, create_time)
+        VALUES (#{postId}, #{userId}, #{actionType}, #{createTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.PostInteraction">
+        UPDATE post_interaction
+        SET
+            post_id = #{postId},
+            user_id = #{userId},
+            action_type = #{actionType},
+            create_time = #{createTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM post_interaction
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByPostId">
+        DELETE FROM post_interaction
+        WHERE post_id = #{postId}
+    </delete>
+
+    <select id="selectByPostIdAndUserIdAndActionType" resultType="org.example.common.entity.PostInteraction">
+        SELECT <include refid="Base_Column_List"/>
+        FROM post_interaction
+        WHERE post_id = #{postId}
+          AND user_id = #{userId}
+          AND action_type = #{actionType}
+        LIMIT 1
+    </select>
+
+</mapper>

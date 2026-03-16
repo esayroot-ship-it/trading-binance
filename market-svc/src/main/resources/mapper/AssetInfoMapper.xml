@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.marketsvc.mapper.AssetInfoMapper">
+
+    <sql id="Base_Column_List">id, symbol, name, asset_type, market, status, sort_order, create_time, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.AssetInfo">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_info
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.AssetInfo">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_info
+        ORDER BY sort_order DESC, id DESC
+    </select>
+
+    <select id="selectByAssetTypeAndStatus" resultType="org.example.common.entity.AssetInfo">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_info
+        WHERE asset_type = #{assetType}
+          AND status = #{status}
+        ORDER BY sort_order DESC, id DESC
+    </select>
+
+    <select id="selectBySymbol" resultType="org.example.common.entity.AssetInfo">
+        SELECT <include refid="Base_Column_List"/>
+        FROM asset_info
+        WHERE symbol = #{symbol}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.AssetInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO asset_info (symbol, name, asset_type, market, status, sort_order, create_time, update_time)
+        VALUES (#{symbol}, #{name}, #{assetType}, #{market}, #{status}, #{sortOrder}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.AssetInfo">
+        UPDATE asset_info
+        SET symbol = #{symbol},
+            name = #{name},
+            asset_type = #{assetType},
+            market = #{market},
+            status = #{status},
+            sort_order = #{sortOrder},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatusById">
+        UPDATE asset_info
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM asset_info
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

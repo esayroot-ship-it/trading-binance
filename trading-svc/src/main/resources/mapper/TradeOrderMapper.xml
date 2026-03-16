@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.tradingsvc.mapper.TradeOrderMapper">
+
+    <sql id="Base_Column_List">id, order_no, user_id, symbol, asset_type, direction, action, order_type, trigger_price, entrust_price, entrust_quantity, filled_quantity, avg_filled_price, realized_pnl, status, create_time, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.TradeOrder">
+        SELECT <include refid="Base_Column_List"/>
+        FROM trade_order
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.TradeOrder">
+        SELECT <include refid="Base_Column_List"/>
+        FROM trade_order
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectByOrderNo" resultType="org.example.common.entity.TradeOrder">
+        SELECT <include refid="Base_Column_List"/>
+        FROM trade_order
+        WHERE order_no = #{orderNo}
+        LIMIT 1
+    </select>
+
+    <select id="selectByUserId" resultType="org.example.common.entity.TradeOrder">
+        SELECT <include refid="Base_Column_List"/>
+        FROM trade_order
+        WHERE user_id = #{userId}
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectPendingBySymbol" resultType="org.example.common.entity.TradeOrder">
+        SELECT <include refid="Base_Column_List"/>
+        FROM trade_order
+        WHERE symbol = #{symbol}
+          AND status = 'PENDING'
+        ORDER BY id ASC
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.TradeOrder">
+        INSERT INTO trade_order (order_no, user_id, symbol, asset_type, direction, action, order_type, trigger_price, entrust_price, entrust_quantity, filled_quantity, avg_filled_price, realized_pnl, status, create_time, update_time)
+        VALUES (#{orderNo}, #{userId}, #{symbol}, #{assetType}, #{direction}, #{action}, #{orderType}, #{triggerPrice}, #{entrustPrice}, #{entrustQuantity}, #{filledQuantity}, #{avgFilledPrice}, #{realizedPnl}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.TradeOrder">
+        UPDATE trade_order
+        SET
+            order_no = #{orderNo},
+            user_id = #{userId},
+            symbol = #{symbol},
+            asset_type = #{assetType},
+            direction = #{direction},
+            action = #{action},
+            order_type = #{orderType},
+            trigger_price = #{triggerPrice},
+            entrust_price = #{entrustPrice},
+            entrust_quantity = #{entrustQuantity},
+            filled_quantity = #{filledQuantity},
+            avg_filled_price = #{avgFilledPrice},
+            realized_pnl = #{realizedPnl},
+            status = #{status},
+            create_time = #{createTime},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatusByOrderNoAndUserId">
+        UPDATE trade_order
+        SET status = #{toStatus},
+            realized_pnl = 0,
+            update_time = #{updateTime}
+        WHERE order_no = #{orderNo}
+          AND user_id = #{userId}
+          AND status = #{fromStatus}
+    </update>
+
+    <update id="updateFilledIfPending">
+        UPDATE trade_order
+        SET status = 'FILLED',
+            filled_quantity = #{filledQuantity},
+            avg_filled_price = #{avgFilledPrice},
+            realized_pnl = #{realizedPnl},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+          AND status = 'PENDING'
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM trade_order
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

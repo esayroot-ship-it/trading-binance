@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.usersvc.mapper.UserFollowMapper">
+
+    <sql id="Base_Column_List">id, follower_id, followee_id, create_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.UserFollow">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_follow
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.UserFollow">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_follow
+    </select>
+
+    <select id="selectByFollowerAndFollowee" resultType="org.example.common.entity.UserFollow">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_follow
+        WHERE follower_id = #{followerId}
+          AND followee_id = #{followeeId}
+        LIMIT 1
+    </select>
+
+    <select id="selectFolloweesByFollowerId" resultType="org.example.common.DTO.TradingPlatformDTO$UserFollowItem">
+        SELECT
+            uf.followee_id AS user_id,
+            u.username,
+            u.nickname,
+            u.avatar,
+            uf.create_time AS follow_time
+        FROM user_follow uf
+                 INNER JOIN `user` u ON u.id = uf.followee_id
+        WHERE uf.follower_id = #{followerId}
+          AND u.is_deleted = 0
+        ORDER BY uf.id DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.UserFollow">
+        INSERT INTO user_follow (follower_id, followee_id, create_time)
+        VALUES (#{followerId}, #{followeeId}, #{createTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.UserFollow">
+        UPDATE user_follow
+        SET
+            follower_id = #{followerId},
+            followee_id = #{followeeId},
+            create_time = #{createTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByFollowerAndFollowee">
+        DELETE FROM user_follow
+        WHERE follower_id = #{followerId}
+          AND followee_id = #{followeeId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM user_follow
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

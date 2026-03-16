@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: debug
+
+logging:
+  level:
+    org.example.marketsvc: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.springframework.http.client: DEBUG
+    org.springframework.web: INFO

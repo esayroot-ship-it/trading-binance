@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.socialsvc.mapper.NewsArticleMapper">
+
+    <sql id="Base_Column_List">id, category_id, title, summary, ai_summary, ai_sentiment, ai_status, content, source, image_url, status, publish_time, create_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.NewsArticle">
+        SELECT <include refid="Base_Column_List"/>
+        FROM news_article
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.NewsArticle">
+        SELECT <include refid="Base_Column_List"/>
+        FROM news_article
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.NewsArticle" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO news_article (category_id, title, summary, ai_summary, ai_sentiment, ai_status, content, source, image_url, status, publish_time, create_time)
+        VALUES (#{categoryId}, #{title}, #{summary}, #{aiSummary}, #{aiSentiment}, #{aiStatus}, #{content}, #{source}, #{imageUrl}, #{status}, #{publishTime}, #{createTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.NewsArticle">
+        UPDATE news_article
+        SET
+            category_id = #{categoryId},
+            title = #{title},
+            summary = #{summary},
+            ai_summary = #{aiSummary},
+            ai_sentiment = #{aiSentiment},
+            ai_status = #{aiStatus},
+            content = #{content},
+            source = #{source},
+            image_url = #{imageUrl},
+            status = #{status},
+            publish_time = #{publishTime},
+            create_time = #{createTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM news_article
+        WHERE id = #{id}
+    </delete>
+
+    <select id="selectPage" resultType="org.example.common.entity.NewsArticle">
+        SELECT <include refid="Base_Column_List"/>
+        FROM news_article
+        WHERE status = 1
+        ORDER BY publish_time DESC, id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVisible" resultType="long">
+        SELECT COUNT(1)
+        FROM news_article
+        WHERE status = 1
+    </select>
+
+    <select id="selectPageByCategory" resultType="org.example.common.entity.NewsArticle">
+        SELECT <include refid="Base_Column_List"/>
+        FROM news_article
+        WHERE status = 1
+          AND category_id = #{categoryId}
+        ORDER BY publish_time DESC, id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVisibleByCategory" resultType="long">
+        SELECT COUNT(1)
+        FROM news_article
+        WHERE status = 1
+          AND category_id = #{categoryId}
+    </select>
+
+</mapper>

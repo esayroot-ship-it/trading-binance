@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.tradingsvc.mapper.UserAccountMapper">
+
+    <sql id="Base_Column_List">id, user_id, currency, balance, frozen_balance, version, update_time</sql>
+
+    <select id="selectById" resultType="org.example.common.entity.UserAccount">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.common.entity.UserAccount">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_account
+    </select>
+
+    <select id="selectByUserIdAndCurrency" resultType="org.example.common.entity.UserAccount">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE user_id = #{userId}
+          AND currency = #{currency}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="org.example.common.entity.UserAccount">
+        INSERT INTO user_account (user_id, currency, balance, frozen_balance, version, update_time)
+        VALUES (#{userId}, #{currency}, #{balance}, #{frozenBalance}, #{version}, #{updateTime})
+    </insert>
+
+    <update id="updateById" parameterType="org.example.common.entity.UserAccount">
+        UPDATE user_account
+        SET
+            user_id = #{userId},
+            currency = #{currency},
+            balance = #{balance},
+            frozen_balance = #{frozenBalance},
+            version = #{version},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateByIdAndVersion">
+        UPDATE user_account
+        SET
+            balance = #{balance},
+            frozen_balance = #{frozenBalance},
+            version = #{newVersion},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+          AND version = #{version}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM user_account
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
