@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.common.entity.AssetInfo;
-import org.example.marketsvc.config.币安MarketProperties;
+import org.example.marketsvc.config.BinanceMarketProperties;
 import org.example.marketsvc.constant.MarketRedisKeys;
-import org.example.marketsvc.dto.币安行情PriceResponse;
+import org.example.marketsvc.dto.BinanceTickerPriceResponse;
 import org.example.marketsvc.dto.MarketKlineResponse;
 import org.example.marketsvc.dto.MarketQuoteResponse;
 import org.example.marketsvc.dto.MarketWsKlineSnapshotResponse;
@@ -63,7 +63,7 @@ public class MarketDataServiceImpl implements MarketDataService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final 币安MarketProperties binanceMarketProperties;
+    private final BinanceMarketProperties binanceMarketProperties;
     private final MarketPriceChangeProducer marketPriceChangeProducer;
     private final Object wsMonitor = new Object();
     private final Object klineWriteMonitor = new Object();
@@ -94,10 +94,10 @@ public class MarketDataServiceImpl implements MarketDataService {
         List<String> symbols = loadActiveSymbols();
         List<String> timeframes = resolveTrackedTimeframes();
         if (symbols.isEmpty()) {
-            log.warn("定时接口轮询刷新蜡烛图跳过：当前无可用资产");
+            log.warn("定时刷新K线已跳过, 当前无可用资产");
             return;
         }
-        log.info("开始按接口轮询定时刷新蜡烛图缓存，标的数量={}，周期数量={}", symbols.size(), timeframes.size());
+        log.info("开始按REST定时刷新K线缓存, 标的数量={}, 周期数量={}", symbols.size(), timeframes.size());
         for (String symbol : symbols) {
             for (String timeframe : timeframes) {
                 String klineJson = fetchKlineJson(symbol, timeframe, safeHistoryLimit());
@@ -107,16 +107,16 @@ public class MarketDataServiceImpl implements MarketDataService {
                 cacheKline(symbol, timeframe, klineJson);
             }
         }
-        log.info("接口轮询定时刷新蜡烛图缓存完成，标的数量={}，周期数量={}", symbols.size(), timeframes.size());
+        log.info("REST定时刷新K线缓存完成, 标的数量={}, 周期数量={}", symbols.size(), timeframes.size());
     }
 
     @Override
     public void reloadMarketCacheAndStream() {
         List<String> symbols = loadActiveSymbols();
         List<String> timeframes = resolveTrackedTimeframes();
-        log.info("开始重载市场缓存与实时流，资产数量={}，蜡烛图周期={}", symbols.size(), timeframes);
+        log.info("开始重载市场缓存与实时流, 资产数量={}, K线周期={}", symbols.size(), timeframes);
         if (symbols.isEmpty()) {
-            log.warn("当前没有可用资产（资产类型=数字货币且状态=1），将不会初始化行情缓存");
+            log.warn("当前没有可用资产, 资产类型为CRYPTO且状态为1, 不初始化行情缓存");
         }
         clearMarketCache();
         for (String symbol : symbols) {
@@ -125,7 +125,7 @@ public class MarketDataServiceImpl implements MarketDataService {
         subscribedSymbols = symbols;
         subscribedTimeframes = timeframes;
         reconnectRealtimeStream(symbols, timeframes);
-        log.info("市场缓存重载完成，标的数量={}，周期数量={}", symbols.size(), timeframes.size());
+        log.info("市场缓存重载完成, 标的数量={}, 周期数量={}", symbols.size(), timeframes.size());
     }
 
     @Override
@@ -142,7 +142,7 @@ public class MarketDataServiceImpl implements MarketDataService {
             try {
                 return objectMapper.readValue(cached, MarketQuoteResponse.class);
             } catch (Exception ex) {
-                log.warn("解析行情缓存失败，标的={}", safeSymbol, ex);
+                log.warn("解析行情缓存失败, 标的={}", safeSymbol, ex);
             }
         }
 
@@ -252,24 +252,24 @@ public class MarketDataServiceImpl implements MarketDataService {
             return;
         }
         String safeSymbol = symbol.trim().toUpperCase(Locale.ROOT);
-        log.info("开始初始化资产缓存，标的={}，周期数量={}", safeSymbol, timeframes.size());
+        log.info("开始初始化资产缓存, 标的={}, 周期数量={}", safeSymbol, timeframes.size());
 
         BigDecimal latestPrice = fetchLatestPrice(safeSymbol);
         if (latestPrice != null) {
             cacheQuote(buildQuote(safeSymbol, latestPrice));
-            log.info("初始化价格缓存成功，标的={}，价格={}", safeSymbol, latestPrice);
+            log.info("初始化价格缓存成功, 标的={}, 价格={}", safeSymbol, latestPrice);
         } else {
-            log.warn("初始化价格缓存失败，标的={}，未获取到最新价格", safeSymbol);
+            log.warn("初始化价格缓存失败, 标的={}, 未获取到最新价格", safeSymbol);
         }
 
         for (String timeframe : timeframes) {
             String klineJson = fetchKlineJson(safeSymbol, timeframe, safeHistoryLimit());
             cacheKline(safeSymbol, timeframe, klineJson);
             if (StringUtils.hasText(klineJson)) {
-                log.info("初始化蜡烛图缓存成功，标的={}，周期={}，字节数={}",
+                log.info("初始化K线缓存成功, 标的={}, 周期={}, 字节数={}",
                         safeSymbol, timeframe, klineJson.length());
             } else {
-                log.warn("初始化蜡烛图缓存失败，标的={}，周期={}，返回为空", safeSymbol, timeframe);
+                log.warn("初始化K线缓存失败, 标的={}, 周期={}, 返回为空", safeSymbol, timeframe);
             }
         }
     }
@@ -302,7 +302,7 @@ public class MarketDataServiceImpl implements MarketDataService {
                 }
             }
         } catch (Exception ex) {
-            log.warn("解析蜡烛图数据失败", ex);
+            log.warn("解析K线数据失败", ex);
         }
         return result;
     }
@@ -368,27 +368,27 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     private BigDecimal fetchLatestPrice(String symbol) {
         String url = binanceMarketProperties.getBaseUrl() + PRICE_API;
-        log.info("开始抓取最新价格，标的={}，地址={}", symbol, url);
+        log.info("开始抓取最新价格, 标的={}, 地址={}", symbol, url);
         try {
-            币安行情PriceResponse response = restTemplate.getForObject(
+            BinanceTickerPriceResponse response = restTemplate.getForObject(
                     url,
-                    币安行情PriceResponse.class,
+                    BinanceTickerPriceResponse.class,
                     symbol);
             if (response == null || !StringUtils.hasText(response.getPrice())) {
-                log.warn("抓取最新价格结果为空，标的={}", symbol);
+                log.warn("抓取最新价格结果为空, 标的={}", symbol);
                 return null;
             }
-            log.info("抓取最新价格成功，标的={}，价格={}", symbol, response.getPrice());
+            log.info("抓取最新价格成功, 标的={}, 价格={}", symbol, response.getPrice());
             return new BigDecimal(response.getPrice());
         } catch (Exception ex) {
-            log.warn("抓取最新价格失败，标的={}，原因={}", symbol, ex.getMessage(), ex);
+            log.warn("抓取最新价格失败, 标的={}, 原因={}", symbol, ex.getMessage(), ex);
             return null;
         }
     }
 
     private String fetchKlineJson(String symbol, String timeframe, int limit) {
         String url = binanceMarketProperties.getBaseUrl() + KLINE_API;
-        log.info("开始抓取蜡烛图，标的={}，周期={}，条数上限={}，地址={}", symbol, timeframe, limit, url);
+        log.info("开始抓取K线, 标的={}, 周期={}, 条数上限={}, 地址={}", symbol, timeframe, limit, url);
         try {
             String response = restTemplate.getForObject(
                     url,
@@ -397,13 +397,13 @@ public class MarketDataServiceImpl implements MarketDataService {
                     timeframe,
                     limit);
             if (!StringUtils.hasText(response)) {
-                log.warn("抓取蜡烛图结果为空，标的={}，周期={}，条数上限={}", symbol, timeframe, limit);
+                log.warn("抓取K线结果为空, 标的={}, 周期={}, 条数上限={}", symbol, timeframe, limit);
             } else {
-                log.info("抓取蜡烛图成功，标的={}，周期={}，字节数={}", symbol, timeframe, response.length());
+                log.info("抓取K线成功, 标的={}, 周期={}, 字节数={}", symbol, timeframe, response.length());
             }
             return response;
         } catch (Exception ex) {
-            log.warn("抓取蜡烛图失败，标的={}，周期={}，条数上限={}，原因={}",
+            log.warn("抓取K线失败, 标的={}, 周期={}, 条数上限={}, 原因={}",
                     symbol, timeframe, limit, ex.getMessage(), ex);
             return null;
         }
@@ -452,7 +452,7 @@ public class MarketDataServiceImpl implements MarketDataService {
             }
             return objectMapper.writeValueAsString(result);
         } catch (Exception ex) {
-            log.warn("合并蜡烛图结构化文本失败", ex);
+            log.warn("合并K线结构化文本失败", ex);
             return latestJson;
         }
     }
@@ -472,12 +472,12 @@ public class MarketDataServiceImpl implements MarketDataService {
             try {
                 wsClient = wsHttpClient.newWebSocketBuilder()
                         .connectTimeout(Duration.ofSeconds(10))
-                        .buildAsync(URI.create(wsUrl), new 币安StreamListener(session))
+                        .buildAsync(URI.create(wsUrl), new BinanceStreamListener(session))
                         .join();
-                log.info("币安 长连接 已连接，会话={}，标的数量={}，周期数量={}",
+                log.info("Binance长连接已连接, 会话={}, 标的数量={}, 周期数量={}",
                         session, symbols.size(), safeTimeframes.size());
             } catch (Exception ex) {
-                log.error("连接 币安 长连接 失败，会话={}", session, ex);
+                log.error("连接Binance长连接失败, 会话={}", session, ex);
                 scheduleReconnect(session);
             }
         }
@@ -507,7 +507,7 @@ public class MarketDataServiceImpl implements MarketDataService {
                     .orTimeout(WS_CLOSE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .join();
         } catch (Exception ex) {
-            log.debug("关闭 长连接 时忽略异常", ex);
+            log.debug("关闭长连接时忽略异常", ex);
         }
     }
 
@@ -522,19 +522,19 @@ public class MarketDataServiceImpl implements MarketDataService {
                 payload = root;
             }
             String eventType = payload.path("e").asText("");
-            if ("24hr行情".equals(eventType)) {
-                handle行情Event(payload);
+            if ("24hrTicker".equals(eventType)) {
+                handleTickerEvent(payload);
                 return;
             }
             if ("kline".equals(eventType)) {
                 handleKlineEvent(payload);
             }
         } catch (Exception ex) {
-            log.warn("处理 长连接 消息失败", ex);
+            log.warn("处理长连接消息失败", ex);
         }
     }
 
-    private void handle行情Event(JsonNode payload) {
+    private void handleTickerEvent(JsonNode payload) {
         String symbol = normalizeSymbolOrNull(payload.path("s").asText(""));
         String priceText = payload.path("c").asText("");
         if (!StringUtils.hasText(symbol) || !StringUtils.hasText(priceText)) {
@@ -543,7 +543,7 @@ public class MarketDataServiceImpl implements MarketDataService {
         try {
             cacheQuote(buildQuote(symbol, new BigDecimal(priceText)));
         } catch (Exception ex) {
-            log.warn("解析行情事件失败，标的={}", symbol, ex);
+            log.warn("解析Ticker事件失败, 标的={}", symbol, ex);
         }
     }
 
@@ -576,7 +576,7 @@ public class MarketDataServiceImpl implements MarketDataService {
             try {
                 cacheQuote(buildQuote(symbol, new BigDecimal(closePrice)));
             } catch (Exception ex) {
-                log.warn("解析蜡烛图收盘价失败，标的={}", symbol, ex);
+                log.warn("解析K线收盘价失败, 标的={}", symbol, ex);
             }
         }
     }
@@ -656,7 +656,7 @@ public class MarketDataServiceImpl implements MarketDataService {
                     }
                 }
             } catch (Exception ex) {
-                log.warn("扫描 缓存库 键失败，匹配模式={}", pattern, ex);
+                log.warn("扫描缓存键失败, 匹配模式={}", pattern, ex);
             }
             return null;
         });
@@ -690,7 +690,7 @@ public class MarketDataServiceImpl implements MarketDataService {
             }
             return last.get(0).asLong();
         } catch (Exception ex) {
-            log.warn("提取最后蜡烛图时间失败", ex);
+            log.warn("提取最后K线时间失败", ex);
             return null;
         }
     }
@@ -721,7 +721,7 @@ public class MarketDataServiceImpl implements MarketDataService {
                         quoteResponse.getUpdateTime());
             }
         } catch (Exception ex) {
-            log.warn("缓存行情失败，标的={}", quoteResponse.getSymbol(), ex);
+            log.warn("缓存行情失败, 标的={}", quoteResponse.getSymbol(), ex);
         }
     }
 
@@ -852,12 +852,12 @@ public class MarketDataServiceImpl implements MarketDataService {
         private String ignore;
     }
 
-    private final class 币安StreamListener implements WebSocket.Listener {
+    private final class BinanceStreamListener implements WebSocket.Listener {
 
         private final long session;
         private final StringBuilder buffer = new StringBuilder();
 
-        private 币安StreamListener(long session) {
+        private BinanceStreamListener(long session) {
             this.session = session;
         }
 
@@ -880,7 +880,7 @@ public class MarketDataServiceImpl implements MarketDataService {
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
             if (!shuttingDown && wsSessionId.get() == session) {
-                log.warn("币安 长连接 已关闭，会话={}，状态码={}，原因={}", session, statusCode, reason);
+                log.warn("Binance长连接已关闭, 会话={}, 状态码={}, 原因={}", session, statusCode, reason);
                 scheduleReconnect(session);
             }
             return CompletableFuture.completedFuture(null);
@@ -889,7 +889,7 @@ public class MarketDataServiceImpl implements MarketDataService {
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
             if (!shuttingDown && wsSessionId.get() == session) {
-                log.error("币安 长连接 异常，会话={}", session, error);
+                log.error("Binance长连接异常, 会话={}", session, error);
                 scheduleReconnect(session);
             }
         }
